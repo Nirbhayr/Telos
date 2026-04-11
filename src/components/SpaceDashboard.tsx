@@ -85,7 +85,6 @@ function NewsBox({ title, items }: any) {
       </div>
     </div>
   );
-}
 
 /*function Countdown({ date }: { date: string }) {
   const [timeLeft, setTimeLeft] = useState({ dd: "00", hh: "00", mm: "00", ss: "00" });
@@ -128,3 +127,4 @@ function NewsBox({ title, items }: any) {
       ))}
     </div>
   );
+}
