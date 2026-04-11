@@ -86,8 +86,6 @@ function NewsBox({ title, items }: any) {
     </div>
   );
 }
-
-
   return (
     <div className="flex gap-1 font-mono mt-1 border-t border-white/5 pt-1">
       {Object.entries(timeLeft).map(([label, value]) => (
@@ -100,5 +98,6 @@ function NewsBox({ title, items }: any) {
       ))}
     </div>
   );
-
 }
+
+
