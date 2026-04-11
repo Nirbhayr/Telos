@@ -2,13 +2,13 @@ import os
 import feedparser
 import re
 import random
+import time
 from datetime import datetime, timedelta
 from supabase import create_client
 from geopy.geocoders import Nominatim
 from geopy.exc import GeopyError
-import time
 
-geolocator = Nominatim(user_agent="telos_osint_bot")
+geolocator = Nominatim(user_agent="telos_intel_platform_v1")
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 supabase = create_client(url, key)
@@ -27,21 +27,27 @@ def clean_html(raw_html):
     return re.sub(r'<[^>]+>', '', raw_html)
     
 def get_coords(text):
-    """
-    Attempts to find lat/long from text. 
-    Returns (lat, lng) or (20.0, 0.0) if not found.
-    """
     try:
-        location = geolocator.geocode(text, timeout=10)
+        # We search the first 100 characters of the title for locations
+        location = geolocator.geocode(text[:200], timeout=8, language='en')
         if location:
-            jitter_lat = location.latitude + random.uniform(-0.05, 0.05)
-            jitter_lng = location.longitude + random.uniform(-0.05, 0.05)
-            return jitter_lat, jitter_lng
-    except (GeopyError, AttributeError):
-        pass
-    
-    # Fallback to a random global coordinate if geocoding fails 
-    return random.uniform(-40, 60), random.uniform(-120, 130)
+            # Add a jitter so multiple news in the same city don't stack
+            return (
+                location.latitude + random.uniform(-0.07, 0.07),
+                location.longitude + random.uniform(-0.07, 0.07)
+            )
+    except Exception as e:
+        print(f"Geocoding bypass: {e}")
+    # for random locations
+    regions = [
+        (35, 105),  # Asia
+        (50, 15),   # Europe
+        (40, -100), # North America
+        (20, 78),   # India
+        (35, 120)   # East Asia
+    ]
+    base_lat, base_lng = random.choice(regions)
+    return base_lat + random.uniform(-10, 10), base_lng + random.uniform(-10, 10)
 
 
 def scrape():
