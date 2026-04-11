@@ -21,43 +21,45 @@ function App() {
     });
   }, [events, sliderTimestamp, activeTab]);
 
-  return (
-    <main className="relative w-screen h-screen bg-black overflow-hidden text-white font-mono">
+    return (
+    <main className="relative w-screen h-screen bg-[#080808] overflow-hidden text-white font-mono">
       {activeTab === 'WORLD' ? (
         <MapView events={filteredEvents} onEventClick={setSelectedEvent} />
       ) : (
         <SpaceDashboard />
       )}
 
-      {selectedEvent && (
-        <TacticalModule event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-      )}
-
-      {/* OVERLAY HUD */}
-      <div className="absolute inset-0 pointer-events-none z-20">
-        <div className="p-8">
-          <h1 className="text-2xl tracking-[0.4em] font-black border-l-4 border-red-600 pl-4 flex items-baseline gap-2 pointer-events-auto">
-            TELOS <span className="text-[10px] text-red-500 font-bold tracking-normal opacity-70">v1.0</span>
-          </h1>
-          
-          <div className="flex gap-6 mt-4 pl-4 text-[11px] tracking-widest uppercase pointer-events-auto">
-            <button 
-              onClick={() => setActiveTab('WORLD')}
-              className={`pb-1 ${activeTab === 'WORLD' ? 'text-white border-b-2 border-red-600' : 'text-gray-600 hover:text-white'}`}
-            >
-              [ WORLD ]
-            </button>
-            <button 
-              onClick={() => setActiveTab('SPACE')}
-              className={`pb-1 ${activeTab === 'SPACE' ? 'text-white border-b-2 border-red-600' : 'text-gray-600 hover:text-white'}`}
-            >
-              [ SPACE ]
-            </button>
+      {/* TACTICAL HUD OVERLAY */}
+      <div className="absolute top-8 left-8 pointer-events-none z-20">
+        <div className="flex items-start gap-4">
+          <div className="h-12 w-1 bg-[--tactical-cyan] shadow-[0_0_10px_rgba(0,242,255,0.5)]" />
+          <div>
+            <h1 className="text-2xl tracking-[0.5em] font-black glow-text-cyan">TELOS</h1>
+            <div className="flex gap-4 mt-2 pointer-events-auto">
+              {['WORLD', 'SPACE'].map(tab => (
+                <button 
+                  key={tab}
+                  onClick={() => setActiveTab(tab as any)}
+                  className={`text-[10px] tracking-widest px-3 py-1 border transition-all ${
+                    activeTab === tab 
+                    ? 'border-[--tactical-cyan] text-white bg-[--tactical-cyan]/10' 
+                    : 'border-white/10 text-gray-500 hover:text-white'
+                  }`}
+                >
+                  [{tab}]
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* THE NEW FLOATING MODULE */}
+      <TacticalModule event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </main>
   );
 }
-
 export default App;
+
+
+
