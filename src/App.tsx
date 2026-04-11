@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import MapView from './components/MapView';
-import Sidebar from './components/Sidebar';
+import TacticalModule from './components/TacticalModule';
 import SpaceDashboard from './components/SpaceDashboard';
 import { useOsintStore } from './store';
 
@@ -30,7 +30,7 @@ function App() {
       )}
 
       {selectedEvent && (
-        <Sidebar event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+        <TacticalModule event={selectedEvent} onClose={() => setSelectedEvent(null)} />
       )}
 
       {/* OVERLAY HUD */}
