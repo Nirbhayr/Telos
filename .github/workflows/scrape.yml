@@ -23,7 +23,9 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install supabase feedparser requests
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r backend/requirements.txt
 
       - name: Run Scraper
         run: python backend/scraper.py
