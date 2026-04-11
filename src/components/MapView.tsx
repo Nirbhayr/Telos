@@ -1,12 +1,12 @@
 import Map, { Source, Layer } from 'react-map-gl/maplibre';
-import maplibregl from 'maplibre-gl';
-import { useState } from 'react';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import { useState } from 'react';
 
 export default function MapView({ events, onEventClick }: any) {
   const [hoverInfo, setHoverInfo] = useState<any>(null);
 
-  const geoJsonData = {
+  // Cast the type to 'any' to bypass strict GeoJSON validation on Vercel
+  const geoJsonData: any = {
     type: 'FeatureCollection',
     features: events.map((e: any) => ({
       type: 'Feature',
@@ -18,7 +18,6 @@ export default function MapView({ events, onEventClick }: any) {
   return (
     <div className="absolute inset-0 bg-black"> 
       <Map
-        mapLibreGL={maplibregl}
         initialViewState={{ longitude: 0, latitude: 20, zoom: 1.5 }}
         mapStyle="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json"
         style={{ width: '100%', height: '100%' }}
@@ -32,11 +31,11 @@ export default function MapView({ events, onEventClick }: any) {
         }}
         onMouseLeave={() => setHoverInfo(null)}
         onClick={e => {
-          if (e.features?.[0]) onEventClick(e.features[0].properties);
+          const feature = e.features?.[0];
+          if (feature) onEventClick(feature.properties);
         }}
       >
         <Source id="osint-data" type="geojson" data={geoJsonData}>
-          {/* RADIATING PULSE LAYER (High Severity Only) */}
           <Layer
             id="osint-pulse"
             type="circle"
@@ -50,7 +49,6 @@ export default function MapView({ events, onEventClick }: any) {
               'circle-blur': 1.5
             }}
           />
-          {/* MAIN VISIBLE DOT */}
           <Layer
             id="osint-dots"
             type="circle"
@@ -63,18 +61,16 @@ export default function MapView({ events, onEventClick }: any) {
                 '#ffffff'
               ],
               'circle-stroke-width': 2,
-              'circle-stroke-color': '#000' // Black stroke makes it pop on dark map
+              'circle-stroke-color': '#000'
             }}
           />
         </Source>
 
-        {/* HOVER TOOLTIP */}
         {hoverInfo && (
           <div 
             className="absolute pointer-events-none bg-black/95 border border-red-900/50 p-2 text-[10px] text-white font-mono z-[100] shadow-xl"
             style={{ left: hoverInfo.x + 12, top: hoverInfo.y - 12 }}
           >
-            <div className="text-red-500 font-bold mb-1">[ SIGNAL DETECTED ]</div>
             {hoverInfo.headline}
           </div>
         )}
