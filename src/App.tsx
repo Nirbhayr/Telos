@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import MapView from './components/MapView';
 import TacticalModule from './components/TacticalModule';
 import SpaceDashboard from './components/SpaceDashboard';
