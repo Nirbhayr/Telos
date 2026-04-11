@@ -15,9 +15,15 @@ supabase = create_client(url, key)
 
 # Expanded feeds to ensure we get data
 FEEDS = [
-    "http://feeds.bbci.co.uk/news/world/rss.xml",
     "https://www.theguardian.com/world/rss",
-    "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms"
+    "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
+    "foreignaffairs.com/rss.xml",
+    "globalissues.org/news/feed",
+    "e-ir.info/feed",
+    "www.nytimes.com/topic/subject/international-relations/rss.xml",
+    "https://spheresofinfluence.ca/feed/",
+    "https://www.foreignaffairs.com/rss.xml",
+    "https://www.nytimes.com/svc/collections/v1/publish/http://www.nytimes.com/topic/subject/international-relations/rss.xml"
 ]
 
 # Broader keywords to ensure the table populates
