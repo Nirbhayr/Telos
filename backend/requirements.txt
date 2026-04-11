@@ -1,3 +1,4 @@
 supabase
 feedparser
 requests
+geopy
