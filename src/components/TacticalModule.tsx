@@ -1,4 +1,4 @@
-import { X, Activity, Globe, Shield } from 'lucide-react';
+import {Activity, Globe, Shield } from 'lucide-react';
 
 export default function TacticalModule({ event, onClose }: any) {
   if (!event) return null;
