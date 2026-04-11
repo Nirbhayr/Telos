@@ -1,13 +1,16 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+:root {
+  --tactical-bg: #080808;
+  --tactical-cyan: #00f2ff;
+  --tactical-red: #ff3e3e;
+  --tactical-amber: #ffcc00;
+  --tactical-border: rgba(0, 242, 255, 0.2);
+  --halo: 0 0 15px rgba(0, 242, 255, 0.1);
+}
 
-html, body, #root {
-  margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: #000;
-  overflow: hidden;
-  position: fixed; /* Prevents viewport jumping on mobile/resize */
+.tactical-box {
+  background: rgba(8, 8, 8, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--tactical-border);
+  box-shadow: var(--halo);
+  clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
 }
