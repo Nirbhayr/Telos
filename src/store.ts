@@ -23,13 +23,16 @@ export const useOsintStore = create<OsintState>((set) => ({
   setActiveTab: (activeTab) => set({ activeTab }),
   setSliderTimestamp: (time) => set({ sliderTimestamp: time }),
   
-  fetchInitialEvents: async () => {
-
-     // 1. Get your Supabase stored events
+fetchInitialEvents: async () => {
   const { data: supabaseData } = await supabase
     .from('osint_events')
     .select('*')
     .order('created_at', { ascending: false });
+
+  if (supabaseData) {
+    set({ events: supabaseData });
+  }
+},
 
   // 2. Fetch LIVE World News (Example using a free news API)
   // Note: Replace API_KEY with a free key from newsapi.org or gnews.io
@@ -66,5 +69,6 @@ export const useOsintStore = create<OsintState>((set) => ({
     return () => { supabase.removeChannel(channel); };
   }
 }));
+
 
  
