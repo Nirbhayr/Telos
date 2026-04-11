@@ -1,96 +1,52 @@
 import os
 import feedparser
-from supabase import create_client
+import re
 import random
+from datetime import datetime, timedelta
+from supabase import create_client
 
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 supabase = create_client(url, key)
 
-# 1. Your "Bread and Butter" OSINT Keywords
-OSINT_KEYWORDS = [
-    "geopolitics", "tension", "sanctions", "war", "missile", "conflict", 
-    "military", "defense", "border", "deployment", "treaty", "nuclear",
-    "strike", "protest", "security", "intelligence", "cyber", "invasion", "blockade", "hormuz", "strait"
-    "chokepoint", "summit", "talks", "peace", "economic"
-]
+# Stricter Filter
+BLOCKLIST = ["advertisement", "sponsored", "deal", "chicken", "recipe"]
+OSINT_KEYWORDS = ["missile", "strike", "border", "military", "sanction", "conflict", "nuclear"]
 
-# 2. Expanded Reputable Sources
-RSS_FEEDS = {
-    "BBC World": "http://feeds.bbci.co.uk/news/world/rss.xml",
-    "The Guardian": "https://www.theguardian.com/world/rss",
-    "The Hindu": "https://www.thehindu.com/news/national/feeder/default.rss",
-    "Telegraph": "https://www.telegraph.co.uk/rss.xml",
-    "CNN": "http://rss.cnn.com/rss/edition_world.rss",
-    "TOI": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms"
-}
+def clean_html(raw_html):
+    return re.sub(r'<[^>]+>', '', raw_html)
 
-def get_coords(text):
-    for place, coords in LOCATIONS.items():
-        if place.lower() in text.lower():
-            return coords[0], coords[1]
-    return 20.0, 0.0 # Default fallback
+def scrape():
+    # 1. DELETE OLD DATA (Older than 48 hours)
+    cutoff = (datetime.now() - timedelta(hours=48)).isoformat()
+    supabase.table("osint_events").delete().lt("created_at", cutoff).execute()
 
-# Expanded Location list with specific cities to reduce "clumping"
-LOCATIONS = {
-    "Kyiv": [50.45, 30.52], "Donetsk": [48.01, 37.80], "Moscow": [55.75, 37.61],
-    "Tehran": [35.68, 51.38], "Tel Aviv": [32.08, 34.78], "Gaza": [31.50, 34.46],
-    "Taipei": [25.03, 121.56], "New Delhi": [28.61, 77.20], "Washington": [38.90, -77.03],
-    "Seoul": [37.56, 126.97], "Pyongyang": [39.03, 125.75]
-}
-
-def get_coords(text):
-    for place, coords in LOCATIONS.items():
-        if place.lower() in text.lower():
-            # Add small random "jitter" so dots near the same city don't stack perfectly
-            lat = coords[0] + (random.uniform(-0.15, 0.15))
-            lng = coords[1] + (random.uniform(-0.15, 0.15))
-            return lat, lng
-    return 20.0 + random.uniform(-5, 5), 0.0 + random.uniform(-5, 5)
-
-# Stricter filter: Article must have an OSINT keyword AND a geographic keyword
-GEO_KEYWORDS = ["border", "region", "country", "capital", "city", "province", "strait", "sea"]
-
-
-
-def scrape_feeds():
-    for source_name, feed_url in RSS_FEEDS.items():
-        print(f"Scanning {source_name}...")
-        feed = feedparser.parse(feed_url)
+    feed = feedparser.parse("http://feeds.bbci.co.uk/news/world/rss.xml")
+    
+    for entry in feed.entries:
+        title = entry.title
+        summary = clean_html(entry.get('description', ''))
         
-        for entry in feed.entries:
-            title = entry.title.lower()
-            summary = entry.get('description', '').lower()
-            combined_text = f"{title} {summary}"
+        # Validation
+        if any(word in title.lower() for word in BLOCKLIST): continue
+        if not any(word in title.lower() for word in OSINT_KEYWORDS): continue
 
-            # Filter: Only keep if it matches our OSINT keywords
-            if any(word in combined_text for word in OSINT_KEYWORDS):
-                
-                lat, lng = get_coords(combined_text)
-                
-                # Determine Severity
-                severity = "Low"
-                high_alert = ["war", "missile", "strike", "nuclear", "invasion"]
-                if any(word in combined_text for word in high_alert):
-                    severity = "High"
-                elif "tension" in combined_text or "sanction" in combined_text:
-                    severity = "Medium"
+        # Geolocation logic (Simplified for this step)
+        lat, lng = 20.0 + random.uniform(-2, 2), 0.0 + random.uniform(-2, 2)
+        if "Ukraine" in title: lat, lng = 48.37, 31.16
+        if "Israel" in title: lat, lng = 31.04, 34.85
 
-                new_event = {
-                    "headline": entry.title,
-                    "summary": f"[{source_name}] {entry.get('description', 'No summary available.')[:200]}...",
-                    "url": entry.link,
-                    "category": "Geopolitics",
-                    "severity": severity,
-                    "lat": lat,
-                    "lng": lng,
-                    "created_at": "now()"
-                }
-
-                try:
-                    supabase.table("osint_events").upsert(new_event, on_conflict="url").execute()
-                except Exception as e:
-                    print(f"Error inserting: {e}")
+        event = {
+            "headline": title,
+            "summary": summary[:250],
+            "url": entry.link,
+            "severity": "High" if "strike" in title.lower() else "Medium",
+            "lat": lat,
+            "lng": lng,
+            "category": "Geopolitics",
+            "created_at": "now()"
+        }
+        supabase.table("osint_events").upsert(event, on_conflict="url").execute()
 
 if __name__ == "__main__":
-    scrape_feeds()
+    scrape()
