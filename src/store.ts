@@ -12,7 +12,6 @@ interface OsintState {
   sliderTimestamp: number;
   setActiveTab: (tab: 'WORLD' | 'SPACE') => void;
   fetchInitialEvents: () => Promise<void>;
-  setSliderTimestamp: (time: number) => void;
   subscribeToNewEvents: () => () => void;
 }
 
@@ -21,54 +20,25 @@ export const useOsintStore = create<OsintState>((set) => ({
   activeTab: 'WORLD',
   sliderTimestamp: Date.now(),
   setActiveTab: (activeTab) => set({ activeTab }),
-  setSliderTimestamp: (time) => set({ sliderTimestamp: time }),
   
-fetchInitialEvents: async () => {
-  const { data: supabaseData } = await supabase
-    .from('osint_events')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (supabaseData) {
-    set({ events: supabaseData });
-  }
-},
-
-  // 2. Fetch LIVE World News (Example using a free news API)
-  // Note: Replace API_KEY with a free key from newsapi.org or gnews.io
-  try {
-    const liveNewsRes = await fetch('https://ok.surf/api/v1/cors/news-feed'); 
-    const liveData = await liveNewsRes.json();
+  fetchInitialEvents: async () => {
+    // ONLY fetch from your curated Supabase table
+    const { data } = await supabase
+      .from('osint_events')
+      .select('*')
+      .order('created_at', { ascending: false });
     
-    // Map live news to your TELOS format
-    const worldNews = liveData.World.map((article: any, index: number) => ({
-      id: `live-${index}`,
-      headline: article.title,
-      summary: article.source,
-      url: article.link,
-      category: 'Geopolitics',
-      severity: 'Medium',
-      lat: 20 + (Math.random() * 20), // Placeholder: Actual geocoding requires a paid service
-      lng: 0 + (Math.random() * 40),
-      created_at: new Date().toISOString()
-    }));
-
-    set({ events: [...(supabaseData || []), ...worldNews] });
-  } catch (e) {
-    if (supabaseData) set({ events: supabaseData });
-  }
-},
+    if (data) set({ events: data });
+  },
 
   subscribeToNewEvents: () => {
-    const channel = supabase.channel('osint-realtime')
+    const channel = supabase
+      .channel('schema-db-changes')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'osint_events' }, 
         (payload) => {
           set((state) => ({ events: [payload.new, ...state.events] }));
         }
       ).subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => supabase.removeChannel(channel);
   }
 }));
-
-
- 
