@@ -87,34 +87,6 @@ function NewsBox({ title, items }: any) {
   );
 }
 
-function Countdown({ date }: { date: string }) {
-  const [timeLeft, setTimeLeft] = useState({ dd: "00", hh: "00", mm: "00", ss: "00" });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const target = new Date(date).getTime();
-      const now = Date.now();
-      const diff = target - now;
-
-      if (diff <= 0 || isNaN(target)) {
-        setTimeLeft({ dd: "00", hh: "00", mm: "00", ss: "00" });
-        return;
-      }
-
-      const dd = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hh = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const mm = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const ss = Math.floor((diff % (1000 * 60)) / 1000);
-
-      setTimeLeft({
-        dd: dd.toString().padStart(2, '0'),
-        hh: hh.toString().padStart(2, '0'),
-        mm: mm.toString().padStart(2, '0'),
-        ss: ss.toString().padStart(2, '0')
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [date]);
 
   return (
     <div className="flex gap-1 font-mono mt-1 border-t border-white/5 pt-1">
