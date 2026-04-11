@@ -1,6 +1,7 @@
 import os
 import feedparser
 from supabase import create_client
+import random
 
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
