@@ -8,9 +8,10 @@ supabase = create_client(url, key)
 
 # 1. Your "Bread and Butter" OSINT Keywords
 OSINT_KEYWORDS = [
-    "geopolitics", "tension", "sanction", "war", "missile", "conflict", 
+    "geopolitics", "tension", "sanctions", "war", "missile", "conflict", 
     "military", "defense", "border", "deployment", "treaty", "nuclear",
-    "strike", "protest", "security", "intelligence", "cyber", "invasion"
+    "strike", "protest", "security", "intelligence", "cyber", "invasion", "blockade", "hormuz", "strait"
+    "chokepoint", "summit", "talks", "peace", "economic"
 ]
 
 # 2. Expanded Reputable Sources
@@ -23,19 +24,33 @@ RSS_FEEDS = {
     "TOI": "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms"
 }
 
-# 3. Simple Geocoding Dictionary (Expand this over time)
-# This maps country names found in headlines to rough coordinates
-LOCATIONS = {
-    "Ukraine": [48.37, 31.16], "Russia": [61.52, 105.31], "Israel": [31.04, 34.85],
-    "Iran": [32.42, 53.68], "China": [35.86, 104.19], "Taiwan": [23.69, 120.96],
-    "USA": [37.09, -95.71], "India": [20.59, 78.96], "North Korea": [40.33, 127.51]
-}
-
 def get_coords(text):
     for place, coords in LOCATIONS.items():
         if place.lower() in text.lower():
             return coords[0], coords[1]
     return 20.0, 0.0 # Default fallback
+
+# Expanded Location list with specific cities to reduce "clumping"
+LOCATIONS = {
+    "Kyiv": [50.45, 30.52], "Donetsk": [48.01, 37.80], "Moscow": [55.75, 37.61],
+    "Tehran": [35.68, 51.38], "Tel Aviv": [32.08, 34.78], "Gaza": [31.50, 34.46],
+    "Taipei": [25.03, 121.56], "New Delhi": [28.61, 77.20], "Washington": [38.90, -77.03],
+    "Seoul": [37.56, 126.97], "Pyongyang": [39.03, 125.75]
+}
+
+def get_coords(text):
+    for place, coords in LOCATIONS.items():
+        if place.lower() in text.lower():
+            # Add small random "jitter" so dots near the same city don't stack perfectly
+            lat = coords[0] + (random.uniform(-0.15, 0.15))
+            lng = coords[1] + (random.uniform(-0.15, 0.15))
+            return lat, lng
+    return 20.0 + random.uniform(-5, 5), 0.0 + random.uniform(-5, 5)
+
+# Stricter filter: Article must have an OSINT keyword AND a geographic keyword
+GEO_KEYWORDS = ["border", "region", "country", "capital", "city", "province", "strait", "sea"]
+
+
 
 def scrape_feeds():
     for source_name, feed_url in RSS_FEEDS.items():
