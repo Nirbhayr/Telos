@@ -1,33 +1,30 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --tactical-bg: #080808;
+  --tactical-bg: #050505;
   --tactical-cyan: #00f2ff;
   --tactical-red: #ff3e3e;
   --tactical-amber: #ffcc00;
-  --tactical-border: rgba(0, 242, 255, 0.2);
+  --tactical-border: rgba(0, 242, 255, 0.15);
 }
 
-html, body, #root {
+body {
   margin: 0;
-  padding: 0;
-  width: 100vw;
-  height: 100vh;
   background-color: var(--tactical-bg);
   color: white;
+  font-family: 'JetBrains Mono', monospace; /* Or any mono font */
   overflow: hidden;
 }
 
-/* Custom Tactical Box with Angled Corners */
 .tactical-box {
-  background: rgba(8, 8, 8, 0.9);
+  background: rgba(10, 10, 10, 0.8);
   backdrop-filter: blur(12px);
   border: 1px solid var(--tactical-border);
-  box-shadow: 0 0 20px rgba(0, 242, 255, 0.05);
-  clip-path: polygon(0 0, 95% 0, 100% 5%, 100% 100%, 5% 100%, 0 95%);
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.03);
+  clip-path: polygon(0 0, 96% 0, 100% 4%, 100% 100%, 4% 100%, 0 96%);
 }
 
-.glow-text-cyan { text-shadow: 0 0 8px var(--tactical-cyan); }
-.glow-text-red { text-shadow: 0 0 8px var(--tactical-red); }
+.glow-cyan { text-shadow: 0 0 10px var(--tactical-cyan); }
