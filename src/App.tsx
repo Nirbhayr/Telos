@@ -5,21 +5,12 @@ import { useOsintStore } from './store';
 import { Monitor, BookOpen } from 'lucide-react';
 
 function App() {
-  // FIXED: Destructured every variable used in the JSX below
-  const { 
-    fetchInitialEvents, 
-    subscribeToNewEvents, 
-    activeTab, 
-    setActiveTab, 
-    theme, 
-    setTheme 
-  } = useOsintStore();
+  // Destructure everything used in the JSX to satisfy TS
+  const { fetchInitialEvents, activeTab, setActiveTab, theme, setTheme } = useOsintStore();
 
   useEffect(() => {
     fetchInitialEvents();
-    const unsubscribe = subscribeToNewEvents();
-    return () => unsubscribe();
-  }, [fetchInitialEvents, subscribeToNewEvents]);
+  }, [fetchInitialEvents]);
 
   return (
     <div className="min-h-screen flex flex-col telos-bg telos-text">
