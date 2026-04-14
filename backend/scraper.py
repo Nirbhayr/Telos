@@ -19,7 +19,16 @@ SPACE_FEEDS = {
     "Research": "https://arxiv.org/rss/astro-ph",
     "NASA": "https://www.nasa.gov/news-release/feed/",
     "ESA": "https://www.esa.int/rssfeed/Our_Activities/Space_News",
-    "General": "https://spacenews.com/feed/"
+    "General": "https://spacenews.com/feed/",
+
+    "ArXiv_Astro": "https://rss.arxiv.org/rss/astro-ph",
+    "PhysOrg_Space": "https://phys.org/rss-feed/space-news/",
+    "Universe_Today": "https://www.universetoday.com/rss.xml",
+
+    # AEROSPACE ARCHITECTURE & PLATFORMS
+    "Defense_News_Air": "https://www.defensenews.com/arc/outboundfeeds/rss/category/air/?size=20",
+    "Janes_Aerospace": "https://www.janes.com/feeds/news", # High-verifiability defense
+    "FlightGlobal": "https://www.flightglobal.com/71.rss", # Aerospace engineering focus
 }
 
 WORLD_FEEDS = [
