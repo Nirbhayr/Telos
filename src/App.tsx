@@ -5,7 +5,7 @@ import { useOsintStore } from './store';
 import { Monitor, BookOpen } from 'lucide-react';
 
 function App() {
-  // EXTRACTED: Added theme and setTheme here to fix build errors
+  // FIXED: Added theme and setTheme to the destructuring list
   const { 
     fetchInitialEvents, 
     subscribeToNewEvents, 
@@ -14,36 +14,21 @@ function App() {
     theme, 
     setTheme 
   } = useOsintStore();
-  
+
   useEffect(() => {
     fetchInitialEvents();
-    
-    // Start listening for new database entries (Realtime)
     const unsubscribe = subscribeToNewEvents();
-    
-    // Clean up the listener when the app closes
     return () => unsubscribe();
   }, [fetchInitialEvents, subscribeToNewEvents]);
 
-  // Handle HTML class initialization for the theme
-  useEffect(() => {
-    if (theme === 'readable') {
-      document.documentElement.classList.add('theme-readable');
-    } else {
-      document.documentElement.classList.remove('theme-readable');
-    }
-  }, [theme]);
-
   return (
     <div className="min-h-screen flex flex-col telos-bg telos-text">
-      {/* HEADER */}
       <header className="sticky top-0 z-50 telos-panel border-b telos-border shadow-sm px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl md:text-3xl font-black tracking-[0.3em] telos-accent uppercase">
             TELOS
           </h1>
           
-          {/* Mobile Theme Toggle */}
           <button 
             className="md:hidden p-2 border telos-border rounded telos-muted hover:telos-accent transition-colors"
             onClick={() => setTheme(theme === 'tactical' ? 'readable' : 'tactical')}
@@ -62,26 +47,21 @@ function App() {
                   ? 'telos-accent-border telos-accent bg-opacity-10' 
                   : 'telos-border telos-muted hover:telos-text'
               }`}
-              style={{ backgroundColor: activeTab === t ? 'var(--accent-hover)' : 'transparent' }}
             >
               {t}
             </button>
           ))}
           
-          {/* Desktop Theme Toggle */}
           <button 
             className="hidden md:flex items-center gap-2 px-4 py-2 text-sm border telos-border rounded telos-muted hover:telos-text transition-colors ml-4"
             onClick={() => setTheme(theme === 'tactical' ? 'readable' : 'tactical')}
           >
             {theme === 'tactical' ? <BookOpen size={18} /> : <Monitor size={18} />}
-            <span className="ml-2">
-              {theme === 'tactical' ? 'Read Mode' : 'Tactical Mode'}
-            </span>
+            {theme === 'tactical' ? 'Read Mode' : 'Tactical Mode'}
           </button>
         </nav>
       </header>
 
-      {/* MAIN CONTENT AREA */}
       <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
         {activeTab === 'SPACE' ? <SpaceDashboard /> : <WorldDashboard />}
       </main>
