@@ -113,6 +113,13 @@ def scrape_feeds(feed_source, table_name, is_space=False):
 
             for entry in feed.entries[:10]:
                 # ... (rest of your entry processing logic) ...
+                summary = clean_html(entry.get('description', entry.get('summary', '')))
+                event = {
+                    "headline": entry.title,
+                    "summary": summary[:500],
+                    "url": entry.link,
+                    "created_at": datetime.utcnow().isoformat()
+#                 }
                 try:
                     supabase.table(table_name).upsert(event, on_conflict="url").execute()
                     count += 1
@@ -125,37 +132,6 @@ def scrape_feeds(feed_source, table_name, is_space=False):
             continue
             
     print(f"Updated {table_name}: {count} articles.")
-    
-# def scrape_feeds(feed_source, table_name, is_space=False):
-#     print(f"Scraping {table_name}...")
-#     count = 0
-#     # If it's a list (World), convert to generic dict for the loop
-#     items = feed_source.items() if isinstance(feed_source, dict) else [("Global", u) for u in feed_source]
-    
-#     for category, feed_url in items:
-#         try:
-#             feed = feedparser.parse(feed_url)
-#             for entry in feed.entries[:10]:
-#                 summary = clean_html(entry.get('description', entry.get('summary', '')))
-                
-#                 event = {
-#                     "headline": entry.title,
-#                     "summary": summary[:500],
-#                     "url": entry.link,
-#                     "created_at": datetime.utcnow().isoformat()
-#                 }
-                
-#                 if is_space:
-#                     event["tags"] = ["Space", category]
-#                 else:
-#                     event["tags"] = generate_tags(entry.title + " " + summary)
-
-#                 supabase.table(table_name).upsert(event, on_conflict="url").execute()
-#                 count += 1
-#         except Exception as e:
-#             print(f"Error processing feed {feed_url}: {e}")
-            
-#     print(f"Updated {table_name}: {count} articles.")
 
 if __name__ == "__main__":
     cleanup_old_data()
