@@ -21,7 +21,19 @@ SPACE_FEEDS = {
 WORLD_FEEDS = [
     "http://feeds.bbci.co.uk/news/world/rss.xml",
     "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
-    "https://www.foreignaffairs.com/rss.xml"
+    "https://www.foreignaffairs.com/rss.xml",
+    "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
+    "https://www.foreignaffairs.com/rss.xml",
+    "https://globalissues.org/news/feed",
+    "https://www.e-ir.info/feed",
+    "https://www.nytimes.com/svc/collections/v1/publish/http://www.nytimes.com/topic/subject/international-relations/rss.xml"
+    "https://www.theverge.com/rss/index.xml",
+    "https://www.washingtonpost.com/arcio/rss/category/politics/?itid=lk_inline_manual_2",
+    "https://feeds.washingtonpost.com/rss/world?itid=lk_inline_manual_14",
+    "https://feeds.washingtonpost.com/rss/business/technology?itid=lk_inline_manual_12",
+    "https://www.thehindu.com/business/Economy/feeder/default.rss",
+    "https://www.thehindu.com/news/international/feeder/default.rss",
+    "https://www.thehindu.com/business/Industry/feeder/default.rss",
 ]
 
 def clean_html(raw_html):
@@ -89,7 +101,7 @@ def scrape_feeds(feed_dict, table_name, is_space=False):
     print(f"Updated {table_name}: {count} articles.")
 
 if __name__ == "__main__":
-    cleanup_old_data()
+    # cleanup_old_data()
     scrape_space_weather()
     scrape_feeds(SPACE_FEEDS, "space_events", is_space=True)
-    scrape_feeds(WORLD_FEEDS, "osint_events", is_space=False)
+    # scrape_feeds(WORLD_FEEDS, "osint_events", is_space=False)
