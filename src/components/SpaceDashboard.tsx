@@ -27,48 +27,16 @@ export default function SpaceDashboard() {
   const [spaceNews, setSpaceNews] = useState<SpaceEvent[]>([]);
   const [launches, setLaunches] = useState<Launch[]>([]);
   const [loading, setLoading] = useState(true);
-
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     try {
-  //       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-        
-  //       // 1. Fetch News from Supabase
-  //       const { data: news } = await supabase
-  //         .from('space_events')
-  //         .select('*')
-  //         .gte('created_at', yesterday)
-  //         .order('created_at', { ascending: false });
-
-  //       // 2. Fetch Launch Manifest
-  //       const launchRes = await fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5');
-  //       const launchData = await launchRes.json();
-
-  //       setSpaceNews(news || []);
-  //       setLaunches(launchData.results || []);
-  //     } catch (err) {
-  //       console.error("Uplink Error:", err);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   }
-  //   fetchData();
-  // }, []);
-
-  // src/components/SpaceDashboard.tsx
+  
 useEffect(() => {
   async function fetchData() {
     try {
-      // Comment out the timestamp calculation
-      // const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       
       const { data: news } = await supabase
         .from('space_events')
         .select('*')
-        // COMMENT OUT THIS LINE temporarily for diagnosis
-        // .gte('created_at', yesterday) 
         .order('created_at', { ascending: false })
-        .limit(20); // Add a limit to keep payload light
+        .limit(20);
 
       const launchRes = await fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5');
       const launchData = await launchRes.json();
