@@ -1,47 +1,68 @@
-import { useEffect, useState } from 'react';
-import MapView from './components/MapView';
-import TacticalModule from './components/TacticalModule';
+import { useEffect } from 'react';
 import SpaceDashboard from './components/SpaceDashboard';
+import WorldDashboard from './components/WorldDashboard';
 import { useOsintStore } from './store';
+import { Monitor, BookOpen } from 'lucide-react'; // run: npm install lucide-react
 
 function App() {
-  const { fetchInitialEvents, subscribeToNewEvents, events, activeTab, setActiveTab } = useOsintStore();
-  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  const { fetchInitialEvents, activeTab, setActiveTab, theme, setTheme } = useOsintStore();
 
   useEffect(() => {
     fetchInitialEvents();
-    const unsubscribe = subscribeToNewEvents();
-    return () => unsubscribe();
-  }, []);
+    // Initialize theme
+    if (theme === 'readable') document.documentElement.classList.add('theme-readable');
+  }, [fetchInitialEvents, theme]);
 
   return (
-    <main className="relative w-screen h-screen bg-[#050505] overflow-hidden text-white font-mono">
-      {activeTab === 'WORLD' ? (
-        <MapView events={events} onEventClick={setSelectedEvent} />
-      ) : (
-        <SpaceDashboard />
-      )}
+    <div className="min-h-screen flex flex-col telos-bg telos-text">
+      {/* HEADER */}
+      <header className="sticky top-0 z-50 telos-panel border-b telos-border shadow-sm px-4 md:px-8 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl md:text-3xl font-black tracking-[0.3em] telos-accent uppercase">
+            TELOS
+          </h1>
+          
+          {/* Mobile Theme Toggle */}
+          <button 
+            className="md:hidden p-2 border telos-border rounded telos-muted hover:telos-accent transition-colors"
+            onClick={() => setTheme(theme === 'tactical' ? 'readable' : 'tactical')}
+          >
+            {theme === 'tactical' ? <BookOpen size={20} /> : <Monitor size={20} />}
+          </button>
+        </div>
 
-      {/* TACTICAL HEADER */}
-      <div className="absolute top-10 left-10 z-20 pointer-events-none">
-        <h1 className="text-3xl font-black tracking-[0.6em] glow-cyan">TELOS</h1>
-        <div className="flex gap-4 mt-4 pointer-events-auto">
-          {['WORLD', 'SPACE'].map(t => (
+        <nav className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
+          {['SPACE', 'WORLD'].map((t) => (
             <button 
               key={t}
-              onClick={() => setActiveTab(t as any)}
-              className={`text-[10px] px-4 py-1 border transition-all ${
-                activeTab === t ? 'border-[--tactical-cyan] text-[--tactical-cyan] bg-[--tactical-cyan]/10' : 'border-white/10 text-gray-500'
+              onClick={() => setActiveTab(t as 'SPACE' | 'WORLD')}
+              className={`text-sm md:text-base font-bold px-6 py-2 border rounded transition-all whitespace-nowrap ${
+                activeTab === t 
+                  ? 'telos-accent-border telos-accent bg-opacity-10' 
+                  : 'telos-border telos-muted hover:telos-text'
               }`}
+              style={{ backgroundColor: activeTab === t ? 'var(--accent-hover)' : 'transparent' }}
             >
-              // {t}
+              {t}
             </button>
           ))}
-        </div>
-      </div>
+          
+          {/* Desktop Theme Toggle */}
+          <button 
+            className="hidden md:flex items-center gap-2 px-4 py-2 text-sm border telos-border rounded telos-muted hover:telos-text transition-colors ml-4"
+            onClick={() => setTheme(theme === 'tactical' ? 'readable' : 'tactical')}
+          >
+            {theme === 'tactical' ? <BookOpen size={16} /> : <Monitor size={16} />}
+            {theme === 'tactical' ? 'Read Mode' : 'Tactical Mode'}
+          </button>
+        </nav>
+      </header>
 
-      <TacticalModule event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-    </main>
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-8">
+        {activeTab === 'SPACE' ? <SpaceDashboard /> : <WorldDashboard />}
+      </main>
+    </div>
   );
 }
 
