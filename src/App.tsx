@@ -5,7 +5,7 @@ import { useOsintStore } from './store';
 import { Monitor, BookOpen } from 'lucide-react';
 
 function App() {
-  // FIXED: Added theme and setTheme to the destructuring list
+  // FIXED: Destructured every variable used in the JSX below
   const { 
     fetchInitialEvents, 
     subscribeToNewEvents, 
@@ -57,7 +57,7 @@ function App() {
             onClick={() => setTheme(theme === 'tactical' ? 'readable' : 'tactical')}
           >
             {theme === 'tactical' ? <BookOpen size={18} /> : <Monitor size={18} />}
-            {theme === 'tactical' ? 'Read Mode' : 'Tactical Mode'}
+            <span className="ml-2">{theme === 'tactical' ? 'Read Mode' : 'Tactical Mode'}</span>
           </button>
         </nav>
       </header>
