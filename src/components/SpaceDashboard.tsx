@@ -32,14 +32,12 @@ useEffect(() => {
   async function fetchData() {
     try {
       setLoading(true);
-      
-      // 1. Remove the 'yesterday' filter to ensure data always shows
-      // 2. Use .order() and .limit(20) to get the most recent intel
-      const { data: news, error: supabaseError } = await supabase
-        .from('space_events')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
+      const { data: news } = await supabase
+      .from('space_events')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false }) // Ensures the absolute latest is on top
+      .limit(20);
 
       if (supabaseError) {
         console.error("SUPABASE_QUERY_ERROR:", supabaseError.message);
