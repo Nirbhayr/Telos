@@ -1,85 +1,129 @@
+// SpaceDashboard.tsx
 import { useEffect, useState } from 'react';
 
+// Countdown Component
+function Countdown({ date }: { date: string }) {
+  const [t, setT] = useState("--h --m --s");
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const diff = new Date(date).getTime() - Date.now();
+      if (diff <= 0) {
+        setT("LAUNCHED / IN FLIGHT");
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setT(`T- ${h}H ${m}M ${s}S`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [date]);
+
+  return <div className="text-[10px] text-[--tactical-cyan] font-bold mt-1">{t}</div>;
+}
+
 export default function SpaceDashboard() {
-  const [data, setData] = useState({ news: [], launches: [] });
+  const [data, setData] = useState({ 
+    astronomy: [], 
+    aerospace: [], 
+    launches: [] 
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchSpaceData() {
+    async function fetchAllData() {
       try {
         const [newsRes, launchRes] = await Promise.all([
-          fetch('https://api.spaceflightnewsapi.net/v4/articles/?limit=20'),
-          fetch('https://fdo.rocketlaunch.live/json/launches/next/5')
+          fetch('https://api.spaceflightnewsapi.net/v4/articles/?limit=30'),
+          // Switched to Launch Library 2 for better orbital data
+          fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5')
         ]);
         
         const news = (await newsRes.json()).results;
-        const launches = (await launchRes.json()).result;
+        const launches = (await launchRes.json()).results;
 
-        setData({ news: news || [], launches: launches || [] });
+        setData({
+          astronomy: news.filter((a: any) => 
+            a.title.toLowerCase().includes('astronomy') || a.summary.toLowerCase().includes('telescope')
+          ),
+          aerospace: news.filter((a: any) => 
+            a.title.toLowerCase().includes('spacex') || a.title.toLowerCase().includes('boeing') || a.title.toLowerCase().includes('defense')
+          ),
+          launches: launches || []
+        });
       } catch (e) { 
-        console.error("Failed to fetch space data:", e); 
+        console.error("Space API Error:", e); 
       } finally { 
         setLoading(false); 
       }
     }
-    fetchSpaceData();
+    fetchAllData();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex h-64 items-center justify-center telos-accent text-lg font-bold animate-pulse tracking-widest">
-        ESTABLISHING UPLINK...
+      <div className="flex h-screen items-center justify-center bg-black text-[--tactical-cyan] font-mono tracking-widest">
+        INITIALIZING SPACE DATA STREAM...
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 pt-24 h-screen overflow-y-auto bg-black text-white font-mono">
       
-      {/* UPCOMING LAUNCHES (Takes 1 column on large screens) */}
-      <div className="lg:col-span-1 flex flex-col gap-4">
-        <h2 className="text-xl md:text-2xl font-bold telos-accent border-b telos-accent-border pb-2 uppercase">
-          Manifest
+      {/* TACTILE LAUNCH MANIFEST TIMELINE */}
+      <div className="col-span-1 border border-white/10 p-4 bg-zinc-950/50">
+        <h2 className="text-[--tactical-cyan] text-xs font-bold mb-6 border-b border-[--tactical-cyan]/30 pb-2 uppercase tracking-tighter">
+          Launch Manifest
         </h2>
-        {data.launches.map((l: any) => (
-          <div key={l.id} className="telos-panel border telos-border p-4 rounded shadow-md">
-            <div className="font-bold text-lg telos-text mb-1">{l.name}</div>
-            <div className="text-sm telos-accent mb-2">Provider: {l.provider?.name || 'Unknown'}</div>
-            <div className="text-sm telos-muted">
-              {l.win_open ? new Date(l.win_open).toLocaleString() : 'TBD'}
+        <div className="relative pl-4 border-l border-zinc-800 space-y-6">
+          {data.launches.map((l: any) => (
+            <div key={l.id} className="relative">
+              {/* Timeline Dot */}
+              <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 bg-[--tactical-cyan] rounded-full shadow-[0_0_8px_var(--tactical-cyan)]" />
+              
+              <div className="text-[11px] font-bold text-white leading-tight">{l.name}</div>
+              <div className="text-[10px] text-zinc-400 mt-1">
+                Provider: <span className="text-zinc-200">{l.launch_service_provider?.name || 'TBD'}</span>
+              </div>
+              
+              {/* Orbital / Trajectory Data */}
+              {l.mission?.orbit?.name && (
+                <div className="text-[10px] text-zinc-400">
+                  Target Orbit: <span className="text-zinc-200">{l.mission.orbit.name} ({l.mission.orbit.abbrev})</span>
+                </div>
+              )}
+              
+              {/* Explicit IST Conversion */}
+              <div className="text-[10px] text-zinc-500 mt-1 uppercase">
+                {new Date(l.net).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'long' })} IST
+              </div>
+              
+              <Countdown date={l.net} />
             </div>
-            <div className="text-sm telos-muted mt-1 border-t telos-border pt-1">
-              Pad: {l.pad?.location?.name || 'Unknown Location'}
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
 
-      {/* AEROSPACE NEWS (Takes 2 columns on large screens) */}
-      <div className="lg:col-span-2 flex flex-col gap-4">
-        <h2 className="text-xl md:text-2xl font-bold telos-accent border-b telos-accent-border pb-2 uppercase">
-          Sector Comm
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {data.news.map((n: any) => (
-            <a 
-              href={n.url} 
-              target="_blank" 
-              rel="noreferrer" 
-              key={n.id} 
-              className="telos-panel border telos-border p-5 rounded shadow-md hover:border-blue-500 transition-colors group flex flex-col justify-between"
-            >
-              <div>
-                <div className="text-xs font-bold telos-accent uppercase mb-2">
-                  {n.news_site} • {new Date(n.published_at).toLocaleDateString()}
-                </div>
-                <h3 className="text-base md:text-lg font-bold telos-text mb-3 group-hover:telos-accent transition-colors leading-snug">
-                  {n.title}
-                </h3>
-                <p className="text-sm md:text-base telos-muted line-clamp-3">
-                  {n.summary}
-                </p>
-              </div>
+      {/* AEROSPACE & COMM SECTOR (Combined for space) */}
+      <div className="col-span-2 grid grid-cols-2 gap-4">
+        <div className="border border-white/10 p-4 bg-zinc-950/50">
+          <h2 className="text-[--tactical-cyan] text-xs font-bold mb-4 border-b border-[--tactical-cyan]/30 pb-2 uppercase tracking-tighter">Aerospace & Defense</h2>
+          {data.aerospace.slice(0, 6).map((a: any) => (
+            <a href={a.url} target="_blank" rel="noreferrer" key={a.id} className="block mb-4 hover:bg-white/5 transition-colors p-2 border border-transparent hover:border-white/5">
+              <div className="text-[11px] leading-snug text-zinc-200 font-bold mb-1">{a.title}</div>
+              <div className="text-[9px] text-zinc-500 line-clamp-2">{a.summary}</div>
+            </a>
+          ))}
+        </div>
+        
+        <div className="border border-white/10 p-4 bg-zinc-950/50">
+          <h2 className="text-[--tactical-cyan] text-xs font-bold mb-4 border-b border-[--tactical-cyan]/30 pb-2 uppercase tracking-tighter">Astronomy & Science</h2>
+          {data.astronomy.slice(0, 6).map((a: any) => (
+            <a href={a.url} target="_blank" rel="noreferrer" key={a.id} className="block mb-4 hover:bg-white/5 transition-colors p-2 border border-transparent hover:border-white/5">
+              <div className="text-[11px] leading-snug text-zinc-200 font-bold mb-1">{a.title}</div>
+              <div className="text-[9px] text-zinc-500 line-clamp-2">{a.summary}</div>
             </a>
           ))}
         </div>
