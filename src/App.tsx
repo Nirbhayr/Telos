@@ -2,20 +2,37 @@ import { useEffect } from 'react';
 import SpaceDashboard from './components/SpaceDashboard';
 import WorldDashboard from './components/WorldDashboard';
 import { useOsintStore } from './store';
-import { Monitor, BookOpen } from 'lucide-react'; // run: npm install lucide-react
+import { Monitor, BookOpen } from 'lucide-react';
 
 function App() {
-const { fetchInitialEvents, subscribeToNewEvents, activeTab, setActiveTab } = useOsintStore();
+  // EXTRACTED: Added theme and setTheme here to fix build errors
+  const { 
+    fetchInitialEvents, 
+    subscribeToNewEvents, 
+    activeTab, 
+    setActiveTab, 
+    theme, 
+    setTheme 
+  } = useOsintStore();
   
-useEffect(() => {
-  fetchInitialEvents();
-  // Start listening for new database entries
-  const unsubscribe = subscribeToNewEvents();
-  // Clean up the listener when the app closes
-  return () => unsubscribe();
-}, [fetchInitialEvents, subscribeToNewEvents]);
-// if (theme === 'readable') document.documentElement.classList.add('theme-readable');
-//   }, [fetchInitialEvents, theme]);
+  useEffect(() => {
+    fetchInitialEvents();
+    
+    // Start listening for new database entries (Realtime)
+    const unsubscribe = subscribeToNewEvents();
+    
+    // Clean up the listener when the app closes
+    return () => unsubscribe();
+  }, [fetchInitialEvents, subscribeToNewEvents]);
+
+  // Handle HTML class initialization for the theme
+  useEffect(() => {
+    if (theme === 'readable') {
+      document.documentElement.classList.add('theme-readable');
+    } else {
+      document.documentElement.classList.remove('theme-readable');
+    }
+  }, [theme]);
 
   return (
     <div className="min-h-screen flex flex-col telos-bg telos-text">
@@ -57,7 +74,9 @@ useEffect(() => {
             onClick={() => setTheme(theme === 'tactical' ? 'readable' : 'tactical')}
           >
             {theme === 'tactical' ? <BookOpen size={18} /> : <Monitor size={18} />}
-            {theme === 'tactical' ? 'Read Mode' : 'Tactical Mode'}
+            <span className="ml-2">
+              {theme === 'tactical' ? 'Read Mode' : 'Tactical Mode'}
+            </span>
           </button>
         </nav>
       </header>
