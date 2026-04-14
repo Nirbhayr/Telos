@@ -112,7 +112,6 @@ def scrape_feeds(feed_source, table_name, is_space=False):
                 continue
 
             for entry in feed.entries[:10]:
-                # ... (rest of your entry processing logic) ...
                 summary = clean_html(entry.get('description', entry.get('summary', '')))
                 event = {
                     "headline": entry.title,
