@@ -4,6 +4,11 @@ import requests
 import re
 from datetime import datetime, timedelta
 from supabase import create_client
+import socket
+
+
+# Set a 15-second timeout for all network connections
+socket.setdefaulttimeout(15)
 
 # Initialize Supabase
 url = os.environ.get("SUPABASE_URL")
@@ -81,37 +86,67 @@ def scrape_space_weather():
     except Exception as e:
         print(f"Space Weather Error: {e}")
 
+
 def scrape_feeds(feed_source, table_name, is_space=False):
     print(f"Scraping {table_name}...")
     count = 0
-    
-    # If it's a list (World), convert to generic dict for the loop
     items = feed_source.items() if isinstance(feed_source, dict) else [("Global", u) for u in feed_source]
     
     for category, feed_url in items:
         try:
+            # The socket timeout now protects this call
             feed = feedparser.parse(feed_url)
-            for entry in feed.entries[:10]:
-                summary = clean_html(entry.get('description', entry.get('summary', '')))
-                
-                event = {
-                    "headline": entry.title,
-                    "summary": summary[:500],
-                    "url": entry.link,
-                    "created_at": datetime.utcnow().isoformat()
-                }
-                
-                if is_space:
-                    event["tags"] = ["Space", category]
-                else:
-                    event["tags"] = generate_tags(entry.title + " " + summary)
+            
+            # Check if the feed actually returned anything or timed out
+            if not feed.entries:
+                print(f"Skipping empty or unreachable feed: {feed_url}")
+                continue
 
-                supabase.table(table_name).upsert(event, on_conflict="url").execute()
-                count += 1
+            for entry in feed.entries[:10]:
+                # ... (rest of your entry processing logic) ...
+                try:
+                    supabase.table(table_name).upsert(event, on_conflict="url").execute()
+                    count += 1
+                except Exception as e:
+                    print(f"Database insertion error: {e}")
+
         except Exception as e:
-            print(f"Error processing feed {feed_url}: {e}")
+            # This captures network timeouts and prevents the script from hanging
+            print(f"CRITICAL FEED ERROR: {feed_url} timed out or failed. Skipping...")
+            continue
             
     print(f"Updated {table_name}: {count} articles.")
+    
+# def scrape_feeds(feed_source, table_name, is_space=False):
+#     print(f"Scraping {table_name}...")
+#     count = 0
+#     # If it's a list (World), convert to generic dict for the loop
+#     items = feed_source.items() if isinstance(feed_source, dict) else [("Global", u) for u in feed_source]
+    
+#     for category, feed_url in items:
+#         try:
+#             feed = feedparser.parse(feed_url)
+#             for entry in feed.entries[:10]:
+#                 summary = clean_html(entry.get('description', entry.get('summary', '')))
+                
+#                 event = {
+#                     "headline": entry.title,
+#                     "summary": summary[:500],
+#                     "url": entry.link,
+#                     "created_at": datetime.utcnow().isoformat()
+#                 }
+                
+#                 if is_space:
+#                     event["tags"] = ["Space", category]
+#                 else:
+#                     event["tags"] = generate_tags(entry.title + " " + summary)
+
+#                 supabase.table(table_name).upsert(event, on_conflict="url").execute()
+#                 count += 1
+#         except Exception as e:
+#             print(f"Error processing feed {feed_url}: {e}")
+            
+#     print(f"Updated {table_name}: {count} articles.")
 
 if __name__ == "__main__":
     cleanup_old_data()
