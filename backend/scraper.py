@@ -119,7 +119,7 @@ def scrape_feeds(feed_source, table_name, is_space=False):
                     "summary": summary[:500],
                     "url": entry.link,
                     "created_at": datetime.utcnow().isoformat()
-#                 }
+                }
                 try:
                     supabase.table(table_name).upsert(event, on_conflict="url").execute()
                     count += 1
