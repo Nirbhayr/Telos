@@ -31,13 +31,22 @@ export default function SpaceDashboard() {
 useEffect(() => {
   async function fetchData() {
     try {
+      setLoading(true);
       
-      const { data: news } = await supabase
+      // 1. Remove the 'yesterday' filter to ensure data always shows
+      // 2. Use .order() and .limit(20) to get the most recent intel
+      const { data: news, error: supabaseError } = await supabase
         .from('space_events')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(20);
 
+      if (supabaseError) {
+        console.error("SUPABASE_QUERY_ERROR:", supabaseError.message);
+        return;
+      }
+
+      // SpaceDevs Launch API fetch
       const launchRes = await fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5');
       const launchData = await launchRes.json();
 
