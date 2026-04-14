@@ -16,6 +16,15 @@ FEEDS = [
     "https://globalissues.org/news/feed",
     "https://www.e-ir.info/feed",
     "https://www.nytimes.com/svc/collections/v1/publish/http://www.nytimes.com/topic/subject/international-relations/rss.xml"
+    "https://www.theverge.com/rss/index.xml",
+    "https://www.washingtonpost.com/arcio/rss/category/politics/?itid=lk_inline_manual_2",
+    "https://feeds.washingtonpost.com/rss/world?itid=lk_inline_manual_14",
+    "https://feeds.washingtonpost.com/rss/business/technology?itid=lk_inline_manual_12",
+    "https://www.thehindu.com/business/Economy/feeder/default.rss",
+    "https://www.thehindu.com/news/international/feeder/default.rss",
+    "https://www.thehindu.com/business/Industry/feeder/default.rss",
+    "",
+    
 ]
 
 OSINT_KEYWORDS = ["war", "military", "border", "missile", "security", "china", "russia", "israel", "ukraine", "protest", "government", "crisis"]
