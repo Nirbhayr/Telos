@@ -32,17 +32,19 @@ useEffect(() => {
   async function fetchData() {
     try {
       setLoading(true);
-      const { data: news } = await supabase
+      const { data: news, error } = await supabase // Use 'error' here
       .from('space_events')
       .select('*')
       .order('created_at', { ascending: false })
-      .order('id', { ascending: false }) // Ensures the absolute latest is on top
+      .order('id', { ascending: false })
       .limit(20);
 
-      if (supabaseError) {
-        console.error("SUPABASE_QUERY_ERROR:", supabaseError.message);
-        return;
-      }
+    if (error) { // Ensure this matches the variable name above
+      console.error("SUPABASE_QUERY_ERROR:", error.message);
+      setLoading(false);
+    return;
+}
+
 
       // SpaceDevs Launch API fetch
       const launchRes = await fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5');
@@ -58,6 +60,8 @@ useEffect(() => {
   }
   fetchData();
 }, []);
+
+  
 
   if (loading) return <div className="p-10 text-[--accent] animate-pulse font-mono uppercase">Syncing Orbital Assets...</div>;
 
