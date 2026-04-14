@@ -1,7 +1,7 @@
 // SpaceDashboard.tsx
 import { useEffect, useState } from 'react';
 
-// Countdown Component
+// Countdown Component (preserves your required feature)
 function Countdown({ date }: { date: string }) {
   const [t, setT] = useState("--h --m --s");
 
@@ -20,7 +20,7 @@ function Countdown({ date }: { date: string }) {
     return () => clearInterval(timer);
   }, [date]);
 
-  return <div className="text-[10px] text-[--tactical-cyan] font-bold mt-1">{t}</div>;
+  return <div className="text-sm telos-accent font-bold mt-2">{t}</div>;
 }
 
 export default function SpaceDashboard() {
@@ -32,12 +32,12 @@ export default function SpaceDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchAllData() {
+    async function fetchAllSpaceData() {
       try {
         const [newsRes, launchRes] = await Promise.all([
           fetch('https://api.spaceflightnewsapi.net/v4/articles/?limit=30'),
-          // Switched to Launch Library 2 for better orbital data
-          fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5')
+          // Switched to Launch Library 2 for the requested orbital data
+          fetch('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=6')
         ]);
         
         const news = (await newsRes.json()).results;
@@ -58,45 +58,52 @@ export default function SpaceDashboard() {
         setLoading(false); 
       }
     }
-    fetchAllData();
+    fetchAllSpaceData();
   }, []);
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-black text-[--tactical-cyan] font-mono tracking-widest">
-        INITIALIZING SPACE DATA STREAM...
+      <div className="flex h-screen items-center justify-center telos-bg telos-accent text-lg font-bold animate-pulse tracking-widest">
+        ESTABLISHING UPLINK...
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-8 pt-24 h-screen overflow-y-auto bg-black text-white font-mono">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
       
-      {/* TACTILE LAUNCH MANIFEST TIMELINE */}
-      <div className="col-span-1 border border-white/10 p-4 bg-zinc-950/50">
-        <h2 className="text-[--tactical-cyan] text-xs font-bold mb-6 border-b border-[--tactical-cyan]/30 pb-2 uppercase tracking-tighter">
-          Launch Manifest
+      {/* 1. TACTILE MANIFEST TIMELINE (1 column) */}
+      <div className="lg:col-span-1 flex flex-col gap-4">
+        <h2 className="text-xl md:text-2xl font-bold telos-accent border-b telos-accent-border pb-2 uppercase">
+          Manifest
         </h2>
-        <div className="relative pl-4 border-l border-zinc-800 space-y-6">
+        
+        {/* Restored tactile timeline logic within a clean manifest feed */}
+        <div className="relative pl-4 border-l telos-border space-y-8">
           {data.launches.map((l: any) => (
-            <div key={l.id} className="relative">
-              {/* Timeline Dot */}
-              <div className="absolute -left-[21px] top-1 w-2.5 h-2.5 bg-[--tactical-cyan] rounded-full shadow-[0_0_8px_var(--tactical-cyan)]" />
+            <div key={l.id} className="relative telos-panel border telos-border p-4 rounded shadow-md group">
+              {/* Timeline Dot (Aesthetic upgrade) */}
+              <div className="absolute -left-[22px] top-6 w-3 h-3 telos-accent rounded-full shadow-[0_0_8px_var(--accent)] group-hover:telos-border transition-colors" />
               
-              <div className="text-[11px] font-bold text-white leading-tight">{l.name}</div>
-              <div className="text-[10px] text-zinc-400 mt-1">
-                Provider: <span className="text-zinc-200">{l.launch_service_provider?.name || 'TBD'}</span>
+              <div className="font-bold text-base telos-text mb-1">{l.name}</div>
+              <div className="text-sm telos-muted mb-2">
+                Provider: <span className="telos-accent">{l.launch_service_provider?.name || 'Unknown'}</span>
               </div>
               
-              {/* Orbital / Trajectory Data */}
+              {/* Orbital / Trajectory Data (Requested Feature) */}
               {l.mission?.orbit?.name && (
-                <div className="text-[10px] text-zinc-400">
-                  Target Orbit: <span className="text-zinc-200">{l.mission.orbit.name} ({l.mission.orbit.abbrev})</span>
+                <div className="text-sm telos-muted">
+                  Target Orbit: <span className="telos-text">{l.mission.orbit.name} ({l.mission.orbit.abbrev})</span>
                 </div>
               )}
               
-              {/* Explicit IST Conversion */}
-              <div className="text-[10px] text-zinc-500 mt-1 uppercase">
+              {/* PAD LOCATION */}
+              <div className="text-sm telos-muted mt-2 border-t telos-border pt-2">
+                Pad: <span className="telos-text">{l.pad?.location?.name || 'Unknown'}</span>
+              </div>
+              
+              {/* IST TIME (Preserves requirement) */}
+              <div className="text-xs telos-muted mt-2 uppercase">
                 {new Date(l.net).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'long' })} IST
               </div>
               
@@ -106,24 +113,56 @@ export default function SpaceDashboard() {
         </div>
       </div>
 
-      {/* AEROSPACE & COMM SECTOR (Combined for space) */}
-      <div className="col-span-2 grid grid-cols-2 gap-4">
-        <div className="border border-white/10 p-4 bg-zinc-950/50">
-          <h2 className="text-[--tactical-cyan] text-xs font-bold mb-4 border-b border-[--tactical-cyan]/30 pb-2 uppercase tracking-tighter">Aerospace & Defense</h2>
-          {data.aerospace.slice(0, 6).map((a: any) => (
-            <a href={a.url} target="_blank" rel="noreferrer" key={a.id} className="block mb-4 hover:bg-white/5 transition-colors p-2 border border-transparent hover:border-white/5">
-              <div className="text-[11px] leading-snug text-zinc-200 font-bold mb-1">{a.title}</div>
-              <div className="text-[9px] text-zinc-500 line-clamp-2">{a.summary}</div>
+      {/* 2. SECTOR COMM NEWS GRID (2 columns, restored) */}
+      <div className="lg:col-span-2 flex flex-col gap-4">
+        <h2 className="text-xl md:text-2xl font-bold telos-accent border-b telos-accent-border pb-2 uppercase">
+          Sector Comm
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* AEROSPACE (Merged) */}
+          {data.aerospace.slice(0, 10).map((n: any) => (
+            <a 
+              href={n.url} 
+              target="_blank" 
+              rel="noreferrer" 
+              key={n.id} 
+              className="telos-panel border telos-border p-5 rounded shadow-md hover:border-blue-500 transition-colors group flex flex-col justify-between"
+            >
+              <div>
+                <div className="text-xs font-bold telos-accent uppercase mb-2">
+                  {n.news_site} • {new Date(n.published_at).toLocaleDateString()}
+                </div>
+                <h3 className="text-base md:text-lg font-bold telos-text mb-3 group-hover:telos-accent transition-colors leading-snug">
+                  {n.title}
+                </h3>
+                <p className="text-sm md:text-base telos-muted line-clamp-3">
+                  {n.summary}
+                </p>
+              </div>
             </a>
           ))}
-        </div>
-        
-        <div className="border border-white/10 p-4 bg-zinc-950/50">
-          <h2 className="text-[--tactical-cyan] text-xs font-bold mb-4 border-b border-[--tactical-cyan]/30 pb-2 uppercase tracking-tighter">Astronomy & Science</h2>
-          {data.astronomy.slice(0, 6).map((a: any) => (
-            <a href={a.url} target="_blank" rel="noreferrer" key={a.id} className="block mb-4 hover:bg-white/5 transition-colors p-2 border border-transparent hover:border-white/5">
-              <div className="text-[11px] leading-snug text-zinc-200 font-bold mb-1">{a.title}</div>
-              <div className="text-[9px] text-zinc-500 line-clamp-2">{a.summary}</div>
+          
+          {/* ASTRONOMY (Merged) */}
+          {data.astronomy.slice(0, 10).map((n: any) => (
+            <a 
+              href={n.url} 
+              target="_blank" 
+              rel="noreferrer" 
+              key={n.id} 
+              className="telos-panel border telos-border p-5 rounded shadow-md hover:border-blue-500 transition-colors group flex flex-col justify-between"
+            >
+              <div>
+                <div className="text-xs font-bold telos-accent uppercase mb-2">
+                  {n.news_site} • {new Date(n.published_at).toLocaleDateString()}
+                </div>
+                <h3 className="text-base md:text-lg font-bold telos-text mb-3 group-hover:telos-accent transition-colors leading-snug">
+                  {n.title}
+                </h3>
+                <p className="text-sm md:text-base telos-muted line-clamp-3">
+                  {n.summary}
+                </p>
+              </div>
             </a>
           ))}
         </div>
