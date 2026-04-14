@@ -1,94 +1,63 @@
 import os
 import feedparser
 import re
-import random
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from supabase import create_client
-from geopy.geocoders import Nominatim
-from geopy.exc import GeopyError
 
-geolocator = Nominatim(user_agent="telos_intel_platform_v1")
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 supabase = create_client(url, key)
 
-# Expanded feeds to ensure we get data
 FEEDS = [
     "https://www.theguardian.com/world/rss",
     "https://timesofindia.indiatimes.com/rssfeeds/296589292.cms",
-    "foreignaffairs.com/rss.xml",
-    "globalissues.org/news/feed",
-    "e-ir.info/feed",
-    "www.nytimes.com/topic/subject/international-relations/rss.xml",
-    "https://spheresofinfluence.ca/feed/",
     "https://www.foreignaffairs.com/rss.xml",
+    "https://globalissues.org/news/feed",
+    "https://www.e-ir.info/feed",
     "https://www.nytimes.com/svc/collections/v1/publish/http://www.nytimes.com/topic/subject/international-relations/rss.xml"
 ]
 
-# Broader keywords to ensure the table populates
 OSINT_KEYWORDS = ["war", "military", "border", "missile", "security", "china", "russia", "israel", "ukraine", "protest", "government", "crisis"]
 
 def clean_html(raw_html):
     return re.sub(r'<[^>]+>', '', raw_html)
-    
-def get_coords(text):
-    try:
-        # We search the first 100 characters of the title for locations
-        location = geolocator.geocode(text[:200], timeout=8, language='en')
-        if location:
-            # Add a jitter so multiple news in the same city don't stack
-            return (
-                location.latitude + random.uniform(-0.07, 0.07),
-                location.longitude + random.uniform(-0.07, 0.07)
-            )
-    except Exception as e:
-        print(f"Geocoding bypass: {e}")
-    # for random locations
-    regions = [
-        (35, 105),  # Asia
-        (50, 15),   # Europe
-        (40, -100), # North America
-        (20, 78),   # India
-        (35, 120)   # East Asia
-    ]
-    base_lat, base_lng = random.choice(regions)
-    return base_lat + random.uniform(-10, 10), base_lng + random.uniform(-10, 10)
-
 
 def scrape():
-    print("Starting Scrape...")
+    print("Starting mapless OSINT scrape...")
     count = 0
     
-    for url in FEEDS:
-        feed = feedparser.parse(url)
-        print(f"Checking feed: {url} - Found {len(feed.entries)} entries")
-            
-        for entry in feed.entries:
-            title = entry.title
-            summary = clean_html(entry.get('description', ''))
-            combined = (title + " " + summary).lower()
-                
-            if any(word in combined for word in OSINT_KEYWORDS):
-                lat, lng = get_coords(title)
-                time.sleep(1) 
-
-        event = {
-            "headline": title,
-            "summary": summary[:250],
-            "url": entry.link,
-            "severity": "High" if "war" in combined or "missile" in combined else "Medium",
-            "lat": lat,
-            "lng": lng,
-            "category": "Geopolitics",
-            "created_at": datetime.now().isoformat()
-        }
+    for feed_url in FEEDS:
         try:
-            supabase.table("osint_events").upsert(event, on_conflict="url").execute()
-            count += 1
+            feed = feedparser.parse(feed_url)
+            print(f"Checking feed: {feed_url} - Found {len(feed.entries)} entries")
+                
+            for entry in feed.entries:
+                title = entry.title
+                summary = clean_html(entry.get('description', ''))
+                combined = (title + " " + summary).lower()
+                    
+                if any(word in combined for word in OSINT_KEYWORDS):
+                    event = {
+                        "headline": title,
+                        "summary": summary[:300], # Increased slightly for better reading
+                        "url": entry.link,
+                        "severity": "High" if "war" in combined or "missile" in combined else "Medium",
+                        "category": "Geopolitics",
+                        "created_at": datetime.now().isoformat()
+                    }
+                    
+                    try:
+                        # Upsert prevents duplicate news articles based on the URL
+                        supabase.table("osint_events").upsert(event, on_conflict="url").execute()
+                        count += 1
+                    except Exception as e:
+                        print(f"Database insertion failed: {e}")
+                        
         except Exception as e:
-            print(f"Supabase Error: {e}")
-    
+            print(f"Failed to parse feed {feed_url}: {e}")
+
+    print(f"Scrape complete. {count} new/updated events processed.")
 
 if __name__ == "__main__":
     scrape()
