@@ -5,13 +5,17 @@ import { useOsintStore } from './store';
 import { Monitor, BookOpen } from 'lucide-react'; // run: npm install lucide-react
 
 function App() {
-  const { fetchInitialEvents, activeTab, setActiveTab, theme, setTheme } = useOsintStore();
-
-  useEffect(() => {
-    fetchInitialEvents();
-    // Initialize theme
-    if (theme === 'readable') document.documentElement.classList.add('theme-readable');
-  }, [fetchInitialEvents, theme]);
+const { fetchInitialEvents, subscribeToNewEvents, activeTab, setActiveTab } = useOsintStore();
+  
+useEffect(() => {
+  fetchInitialEvents();
+  // Start listening for new database entries
+  const unsubscribe = subscribeToNewEvents();
+  // Clean up the listener when the app closes
+  return () => unsubscribe();
+}, [fetchInitialEvents, subscribeToNewEvents]);
+// if (theme === 'readable') document.documentElement.classList.add('theme-readable');
+//   }, [fetchInitialEvents, theme]);
 
   return (
     <div className="min-h-screen flex flex-col telos-bg telos-text">
