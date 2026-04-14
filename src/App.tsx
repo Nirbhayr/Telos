@@ -27,7 +27,7 @@ function App() {
             className="md:hidden p-2 border telos-border rounded telos-muted hover:telos-accent transition-colors"
             onClick={() => setTheme(theme === 'tactical' ? 'readable' : 'tactical')}
           >
-            {theme === 'tactical' ? <BookOpen size={20} /> : <Monitor size={20} />}
+            {theme === 'tactical' ? <BookOpen size={24} /> : <Monitor size={24} />}
           </button>
         </div>
 
@@ -52,7 +52,7 @@ function App() {
             className="hidden md:flex items-center gap-2 px-4 py-2 text-sm border telos-border rounded telos-muted hover:telos-text transition-colors ml-4"
             onClick={() => setTheme(theme === 'tactical' ? 'readable' : 'tactical')}
           >
-            {theme === 'tactical' ? <BookOpen size={16} /> : <Monitor size={16} />}
+            {theme === 'tactical' ? <BookOpen size={18} /> : <Monitor size={18} />}
             {theme === 'tactical' ? 'Read Mode' : 'Tactical Mode'}
           </button>
         </nav>
