@@ -12,11 +12,12 @@ interface OsintState {
   setActiveTab: (tab: 'SPACE' | 'WORLD') => void;
   setTheme: (theme: 'tactical' | 'readable') => void;
   fetchInitialEvents: () => Promise<void>;
+  subscribeToNewEvents: () => () => void;
 }
 
 export const useOsintStore = create<OsintState>((set) => ({
   events: [],
-  activeTab: 'SPACE', // Space is now the priority
+  activeTab: 'SPACE', 
   theme: 'tactical',
   setActiveTab: (activeTab) => set({ activeTab }),
   setTheme: (theme) => {
@@ -32,9 +33,36 @@ export const useOsintStore = create<OsintState>((set) => ({
     const { data } = await supabase
       .from('osint_events')
       .select('*')
+      // Primary sort by time, secondary by ID to ensure latest is ALWAYS on top
       .order('created_at', { ascending: false })
-      .limit(50); // Keep payload light
+      .order('id', { ascending: false }) 
+      .limit(50);
     
     if (data) set({ events: data });
-  }
+  },
+
+  subscribeToNewEvents: () => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'osint_events' 
+        }, 
+        (payload) => {
+          set((state) => ({
+            // Spread the new event at the front of the array (index 0)
+            events: [payload.new, ...state.events]
+          }));
+        }
+      )
+      .subscribe();
+
+    // Return the unsubscribe function for use in useEffect cleanup
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  },
 }));
