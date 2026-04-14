@@ -5,12 +5,14 @@ import { useOsintStore } from './store';
 import { Monitor, BookOpen } from 'lucide-react';
 
 function App() {
-  // Destructure everything used in the JSX to satisfy TS
-  const { fetchInitialEvents, activeTab, setActiveTab, theme, setTheme } = useOsintStore();
+  const { fetchInitialEvents, subscribeToNewEvents, activeTab, setActiveTab, theme, setTheme } = useOsintStore();
 
   useEffect(() => {
     fetchInitialEvents();
-  }, [fetchInitialEvents]);
+    // Activate real-time DB listening and cleanup on unmount
+    const unsubscribe = subscribeToNewEvents();
+    return () => unsubscribe();
+  }, [fetchInitialEvents, subscribeToNewEvents]);
 
   return (
     <div className="min-h-screen flex flex-col telos-bg telos-text">
