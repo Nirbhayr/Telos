@@ -1,44 +1,40 @@
 import { create } from 'zustand';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 interface OsintState {
   events: any[];
-  activeTab: 'WORLD' | 'SPACE';
-  sliderTimestamp: number;
-  setActiveTab: (tab: 'WORLD' | 'SPACE') => void;
+  activeTab: 'SPACE' | 'WORLD';
+  theme: 'tactical' | 'readable';
+  setActiveTab: (tab: 'SPACE' | 'WORLD') => void;
+  setTheme: (theme: 'tactical' | 'readable') => void;
   fetchInitialEvents: () => Promise<void>;
-  subscribeToNewEvents: () => () => void;
 }
 
 export const useOsintStore = create<OsintState>((set) => ({
   events: [],
-  activeTab: 'WORLD',
-  sliderTimestamp: Date.now(),
+  activeTab: 'SPACE', // Space is now the priority
+  theme: 'tactical',
   setActiveTab: (activeTab) => set({ activeTab }),
+  setTheme: (theme) => {
+    set({ theme });
+    if (theme === 'readable') {
+      document.documentElement.classList.add('theme-readable');
+    } else {
+      document.documentElement.classList.remove('theme-readable');
+    }
+  },
   
   fetchInitialEvents: async () => {
-    // ONLY fetch from your curated Supabase table
     const { data } = await supabase
       .from('osint_events')
       .select('*')
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(50); // Keep payload light
     
     if (data) set({ events: data });
-  },
-
-  subscribeToNewEvents: () => {
-    const channel = supabase
-      .channel('schema-db-changes')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'osint_events' }, 
-        (payload) => {
-          set((state) => ({ events: [payload.new, ...state.events] }));
-        }
-      ).subscribe();
-    return () => supabase.removeChannel(channel);
   }
 }));
