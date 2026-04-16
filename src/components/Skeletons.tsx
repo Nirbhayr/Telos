@@ -1,3 +1,9 @@
+// src/components/Skeletons.tsx
+
+/**
+ * FeedSkeleton mimics the WorldDashboard cards.
+ * No external icon imports required to prevent TS6192.
+ */
 export const FeedSkeleton = () => (
   <div className="telos-panel border telos-border p-5 md:p-6 rounded shadow-lg flex flex-col gap-3 animate-pulse">
     <div className="flex justify-between border-b telos-border pb-3">
@@ -16,6 +22,9 @@ export const FeedSkeleton = () => (
   </div>
 );
 
+/**
+ * LaunchSkeleton mimics the vertical timeline items in SpaceDashboard.
+ */
 export const LaunchSkeleton = () => (
   <div className="relative telos-panel border telos-border p-4 rounded animate-pulse">
     <div className="h-4 w-3/4 bg-gray-600/30 rounded mb-2"></div>
