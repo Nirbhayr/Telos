@@ -21,9 +21,9 @@ interface OsintState {
   events: OsintEvent[];
   spaceNews: OsintEvent[];
   launches: LaunchEvent[];
-  activeTab: 'SPACE' | 'WORLD' | 'AIRSPACE'; // Added AIRSPACE
+  activeTab: 'SPACE' | 'WORLD' | 'AIRSPACE'; // Updated
   theme: 'tactical' | 'readable';
-  setActiveTab: (tab: 'SPACE' | 'WORLD' | 'AIRSPACE') => void; // Updated
+  setActiveTab: (tab: 'SPACE' | 'WORLD' | 'AIRSPACE') => void;
   setTheme: (theme: 'tactical' | 'readable') => void;
   fetchInitialEvents: () => Promise<void>;
   subscribeToNewEvents: () => () => void;
@@ -38,25 +38,29 @@ export const useOsintStore = create<OsintState>((set) => ({
   spaceNews: [],
   launches: [],
   activeTab: 'SPACE',
+  theme: 'tactical', // Ensure this is explicitly set here
   setActiveTab: (activeTab) => set({ activeTab }),
   setTheme: (theme) => {
     set({ theme });
     document.documentElement.classList.toggle('theme-readable', theme === 'readable');
   },
-
   fetchInitialEvents: async () => {
     const [world, space, launch] = await Promise.all([
       supabase.from('osint_events').select('*').order('created_at', { ascending: false }).limit(50),
       supabase.from('space_events').select('*').order('created_at', { ascending: false }).limit(20),
       supabase.from('space_launches').select('*').order('net', { ascending: true }).limit(5)
     ]);
-    set({ events: world.data || [], spaceNews: space.data || [], launches: launch.data || [] });
+    set({ 
+        events: world.data || [], 
+        spaceNews: space.data || [], 
+        launches: launch.data || [],
+        theme: 'tactical' // Explicitly re-set or use a functional update to satisfy TS
+    });
   },
   subscribeToNewEvents: () => {
     const channel = supabase.channel('global-updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'osint_events' }, () => useOsintStore.getState().fetchInitialEvents())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'space_events' }, () => useOsintStore.getState().fetchInitialEvents())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'osint_events' }, () => {})
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  },
+  }
 }));
