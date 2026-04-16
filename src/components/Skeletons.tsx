@@ -1,5 +1,5 @@
 // src/components/Skeletons.tsx
-import { AlertTriangle, Globe } from 'lucide-react';
+// import { AlertTriangle, Globe } from 'lucide-react';
 
 export const FeedSkeleton = () => (
   <div className="telos-panel border telos-border p-5 md:p-6 rounded shadow-lg flex flex-col gap-3 animate-pulse">
