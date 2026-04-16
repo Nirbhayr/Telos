@@ -4,6 +4,7 @@ import WorldDashboard from './components/WorldDashboard';
 import AirspaceDashboard from './components/AirspaceDashboard'; // New Component
 import { useOsintStore } from './store';
 import { Monitor, BookOpen, Plane } from 'lucide-react';
+import 'leaflet/dist/leaflet.css';
 
 function App() {
   // Destructure state and actions from the store
