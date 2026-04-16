@@ -1,5 +1,5 @@
 import { useOsintStore } from '../store';
-import { AlertTriangle, Globe } from 'lucide-react';
+import { AlertTriangle, Globe, Activity } from 'lucide-react';
 
 export default function WorldDashboard() {
   const { events } = useOsintStore();
@@ -14,44 +14,51 @@ export default function WorldDashboard() {
         Global OSINT Feed
       </h2>
       
-      {events.map((event) => (
-        <article key={event.id} className="telos-panel border telos-border p-5 md:p-6 rounded shadow-lg flex flex-col gap-3">
-          
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b telos-border pb-3">
-            <div className="flex items-center gap-3">
-              <span className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded ${event.severity === 'High' ? 'bg-red-500/20 text-red-500 border border-red-500/50' : 'bg-orange-500/20 text-orange-500 border border-orange-500/50'}`}>
-                <AlertTriangle size={14} />
-                {event.severity?.toUpperCase()}
-              </span>
-              <span className="flex items-center gap-1 text-xs telos-muted uppercase">
-                <Globe size={14} /> {event.category || 'Geopolitics'}
-              </span>
+      {events.map((event) => {
+        const isHigh = event.severity === 'High';
+        
+        return (
+          <article key={event.id} className="telos-panel border telos-border p-5 md:p-6 rounded shadow-lg flex flex-col gap-3 hover:border-white/20 transition-colors">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b telos-border pb-3">
+              <div className="flex items-center gap-3">
+                <span className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded border uppercase tracking-wider ${
+                  isHigh 
+                    ? 'bg-red-500/10 text-red-500 border-red-500/50' 
+                    : 'bg-cyan-500/10 text-cyan-400 border-cyan-500/50'
+                }`}>
+                  {isHigh ? <AlertTriangle size={14} /> : <Activity size={14} />}
+                  {event.severity || 'Normal'}
+                </span>
+                <span className="flex items-center gap-1 text-xs telos-muted uppercase tracking-widest">
+                  <Globe size={14} /> {event.category || 'Global'}
+                </span>
+              </div>
+              <div className="text-xs telos-muted font-mono">
+                {new Date(event.created_at).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false })}
+              </div>
             </div>
-            <div className="text-xs telos-muted">
-              {new Date(event.created_at).toLocaleString()}
+
+            <h3 className="text-lg md:text-xl font-bold telos-text leading-tight mt-1">
+              {event.headline}
+            </h3>
+            
+            <p className="text-sm md:text-base telos-muted leading-relaxed">
+              {event.summary?.replace(/<[^>]*>?/gm, '')}
+            </p>
+
+            <div className="mt-2 pt-3 border-t telos-border">
+              <a 
+                href={event.url} 
+                target="_blank" 
+                rel="noreferrer" 
+                className="text-sm font-bold telos-accent hover:text-white transition-colors uppercase tracking-widest inline-flex items-center gap-2"
+              >
+                Access Source Report →
+              </a>
             </div>
-          </div>
-
-          <h3 className="text-lg md:text-xl font-bold telos-text leading-tight mt-1">
-            {event.headline}
-          </h3>
-          
-          <p className="text-sm md:text-base telos-muted leading-relaxed">
-            {event.summary?.replace(/<[^>]*>?/gm, '')}
-          </p>
-
-          <div className="mt-2 pt-3 border-t telos-border">
-            <a 
-              href={event.url} 
-              target="_blank" 
-              rel="noreferrer" 
-              className="text-sm font-bold telos-accent hover:underline uppercase tracking-wide inline-flex items-center gap-2"
-            >
-              Access Source Report →
-            </a>
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </div>
   );
 }
