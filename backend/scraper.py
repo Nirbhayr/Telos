@@ -1,11 +1,11 @@
 import os
+import time
 import feedparser
 import requests
 import re
 from datetime import datetime, timedelta
 from supabase import create_client
 import socket
-
 
 # Set a 15-second timeout for all network connections
 socket.setdefaulttimeout(15)
@@ -20,15 +20,12 @@ SPACE_FEEDS = {
     "NASA": "https://www.nasa.gov/news-release/feed/",
     "ESA": "https://www.esa.int/rssfeed/Our_Activities/Space_News",
     "General": "https://spacenews.com/feed/",
-
     "ArXiv_Astro": "https://rss.arxiv.org/rss/astro-ph",
     "PhysOrg_Space": "https://phys.org/rss-feed/space-news/",
     "Universe_Today": "https://www.universetoday.com/rss.xml",
-
-    # AEROSPACE ARCHITECTURE & PLATFORMS
     "Defense_News_Air": "https://www.defensenews.com/arc/outboundfeeds/rss/category/air/?size=20",
-    "Janes_Aerospace": "https://www.janes.com/feeds/news", # High-verifiability defense
-    "FlightGlobal": "https://www.flightglobal.com/71.rss", # Aerospace engineering focus
+    "Janes_Aerospace": "https://www.janes.com/feeds/news",
+    "FlightGlobal": "https://www.flightglobal.com/71.rss", 
 }
 
 WORLD_FEEDS = [
@@ -68,12 +65,12 @@ def generate_tags(text):
     return tags
 
 def cleanup_old_data():
-    """Removes data older than 24 hours using explicit UTC time"""
-    time_limit = (datetime.utcnow() - timedelta(hours=24)).isoformat()
+    """Removes data older than 12 hours for a tactical, fast-paced feed"""
+    time_limit = (datetime.utcnow() - timedelta(hours=12)).isoformat()
     try:
         supabase.table("osint_events").delete().lt("created_at", time_limit).execute()
         supabase.table("space_events").delete().lt("created_at", time_limit).execute()
-        print("Cleanup: Stale data purged.")
+        print("Cleanup: Stale data (older than 12h) purged.")
     except Exception as e:
         print(f"Cleanup Error: {e}")
 
@@ -83,12 +80,11 @@ def scrape_space_weather():
     try:
         res = requests.get("https://services.swpc.noaa.gov/text/discussion.txt", timeout=10)
         if res.status_code == 200:
-            content = res.text[:500] # Grab the start of the discussion
+            content = res.text[:500] 
             event = {
                 "headline": "NOAA Space Weather Prediction Discussion",
                 "summary": content.replace('\n', ' '),
                 "url": "https://www.swpc.noaa.gov/",
-                "tags": ["Space", "Weather"],
                 "created_at": datetime.utcnow().isoformat()
             }
             supabase.table("space_events").upsert(event, on_conflict="url").execute()
@@ -102,7 +98,6 @@ def scrape_launches():
         res = requests.get('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5', timeout=15)
         if res.status_code == 200:
             data = res.json()
-            # Clear and update
             supabase.table("space_launches").delete().neq("id", "0").execute()
             launches = [{"id": r["id"], "name": r["name"], "net": r["net"]} for r in data.get('results', [])]
             if launches:
@@ -111,30 +106,48 @@ def scrape_launches():
     except Exception as e:
         print(f"Launch Fetch Error: {e}")
 
-
 def scrape_feeds(feed_source, table_name, is_space=False):
     print(f"Scraping {table_name}...")
     count = 0
     items = feed_source.items() if isinstance(feed_source, dict) else [("Global", u) for u in feed_source]
     
-    for category, feed_url in items:
+    # Define our 12-hour rolling window cutoff
+    cutoff_time = datetime.utcnow() - timedelta(hours=12)
+
+    for category_name, feed_url in items:
         try:
-            # The socket timeout now protects this call
             feed = feedparser.parse(feed_url)
-            
-            # Check if the feed actually returned anything or timed out
             if not feed.entries:
                 print(f"Skipping empty or unreachable feed: {feed_url}")
                 continue
 
             for entry in feed.entries[:10]:
                 summary = clean_html(entry.get('description', entry.get('summary', '')))
+                
+                # 1. Get the actual publication date from the RSS feed
+                pub_date = datetime.utcnow()
+                if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                    pub_date = datetime.fromtimestamp(time.mktime(entry.published_parsed))
+                elif hasattr(entry, 'updated_parsed') and entry.updated_parsed:
+                    pub_date = datetime.fromtimestamp(time.mktime(entry.updated_parsed))
+
+                # 2. Hard Gate: If the article is already older than 12 hours, ignore it
+                if pub_date < cutoff_time:
+                    continue
+
                 event = {
                     "headline": entry.title,
                     "summary": summary[:500],
                     "url": entry.link,
-                    "created_at": datetime.utcnow().isoformat()
+                    "created_at": pub_date.isoformat()
                 }
+
+                # 3. Apply the tags ONLY to the World feed
+                if not is_space:
+                    tags = generate_tags(entry.title + " " + summary)
+                    event["category"] = tags[0] if tags else "Global"
+                    event["severity"] = "High" if any(t in tags for t in ["Conflict", "Environment"]) else "Normal"
+
                 try:
                     supabase.table(table_name).upsert(event, on_conflict="url").execute()
                     count += 1
@@ -142,16 +155,14 @@ def scrape_feeds(feed_source, table_name, is_space=False):
                     print(f"Database insertion error: {e}")
 
         except Exception as e:
-            # This captures network timeouts and prevents the script from hanging
             print(f"CRITICAL FEED ERROR: {feed_url} timed out or failed. Skipping...")
             continue
             
-    print(f"Updated {table_name}: {count} articles.")
-
+    print(f"Updated {table_name}: {count} fresh articles.")
 
 if __name__ == "__main__":
     cleanup_old_data()
-    scrape_launches() # Run this first
+    scrape_launches() 
     scrape_space_weather()
     scrape_feeds(SPACE_FEEDS, "space_events", is_space=True)
     scrape_feeds(WORLD_FEEDS, "osint_events", is_space=False)
