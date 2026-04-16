@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Polyline, Popup } from 'react-leaflet';
 import { createClient } from '@supabase/supabase-js';
-import { Plane, ShieldAlert, Clock } from 'lucide-react';
+import { ShieldAlert, Clock } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
