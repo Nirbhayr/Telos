@@ -21,9 +21,9 @@ interface OsintState {
   events: OsintEvent[];
   spaceNews: OsintEvent[];
   launches: LaunchEvent[];
-  activeTab: 'SPACE' | 'WORLD';
+  activeTab: 'SPACE' | 'WORLD' | 'AIRSPACE'; // Added AIRSPACE
   theme: 'tactical' | 'readable';
-  setActiveTab: (tab: 'SPACE' | 'WORLD') => void;
+  setActiveTab: (tab: 'SPACE' | 'WORLD' | 'AIRSPACE') => void; // Updated
   setTheme: (theme: 'tactical' | 'readable') => void;
   fetchInitialEvents: () => Promise<void>;
   subscribeToNewEvents: () => () => void;
@@ -38,12 +38,12 @@ export const useOsintStore = create<OsintState>((set) => ({
   spaceNews: [],
   launches: [],
   activeTab: 'SPACE',
-  theme: 'tactical',
   setActiveTab: (activeTab) => set({ activeTab }),
   setTheme: (theme) => {
     set({ theme });
     document.documentElement.classList.toggle('theme-readable', theme === 'readable');
   },
+
   fetchInitialEvents: async () => {
     const [world, space, launch] = await Promise.all([
       supabase.from('osint_events').select('*').order('created_at', { ascending: false }).limit(50),
