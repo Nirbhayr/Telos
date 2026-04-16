@@ -95,38 +95,21 @@ def scrape_space_weather():
     except Exception as e:
         print(f"Space Weather Error: {e}")
 
-
-
 def scrape_launches():
-    """Fetches upcoming launches and stores them in Supabase, bypassing frontend rate limits."""
+    """Fetches upcoming launches and stores them in Supabase"""
     print("Fetching upcoming orbital launches...")
     try:
-        # 15s timeout to prevent GitHub Actions hanging
         res = requests.get('https://ll.thespacedevs.com/2.2.0/launch/upcoming/?limit=5', timeout=15)
         if res.status_code == 200:
             data = res.json()
-            
-            # Clear old launch data entirely to keep the manifest fresh
-            # We use a dummy condition id != '0' to safely delete all rows
+            # Clear and update
             supabase.table("space_launches").delete().neq("id", "0").execute()
-            
-            launches = []
-            for r in data.get('results', []):
-                launches.append({
-                    "id": r["id"],
-                    "name": r["name"],
-                    "net": r["net"]
-                })
-            
+            launches = [{"id": r["id"], "name": r["name"], "net": r["net"]} for r in data.get('results', [])]
             if launches:
                 supabase.table("space_launches").insert(launches).execute()
-                print(f"Updated space_launches: {len(launches)} upcoming events.")
-        else:
-             print(f"Launch API returned status code: {res.status_code}")
+                print(f"Updated space_launches: {len(launches)} entries.")
     except Exception as e:
         print(f"Launch Fetch Error: {e}")
-
-
 
 
 def scrape_feeds(feed_source, table_name, is_space=False):
@@ -164,10 +147,11 @@ def scrape_feeds(feed_source, table_name, is_space=False):
             continue
             
     print(f"Updated {table_name}: {count} articles.")
-    
+
+
 if __name__ == "__main__":
     cleanup_old_data()
-    scrape_launches()  # <--- Added launch scraper
+    scrape_launches() # Run this first
     scrape_space_weather()
     scrape_feeds(SPACE_FEEDS, "space_events", is_space=True)
     scrape_feeds(WORLD_FEEDS, "osint_events", is_space=False)
